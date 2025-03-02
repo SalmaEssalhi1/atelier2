@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Blog</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9fafb;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Navbar */
+        nav {
+            background-color: #4f46e5;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav .logo {
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        nav .logo span {
+            color: #a5b4fc;
+        }
+
+        nav .nav-links a {
+            color: #ffffff;
+            text-decoration: none;
+            margin-left: 20px;
+            transition: color 0.3s;
+        }
+
+        nav .nav-links a:hover {
+            color: #a5b4fc;
+        }
+
+        /* Main container */
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .container h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .add-post-btn {
+            background-color: #4f46e5;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .add-post-btn:hover {
+            background-color: #4338ca;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            width: 400px;
+            position: relative;
+        }
+
+        .modal .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        #description, #title {
+            width: 90%;
+            padding: 12px;
+            margin-bottom: 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .modal button {
+            width: 100%;
+            background-color: #4f46e5;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .modal button:hover {
+            background-color: #4338ca;
+        }
+
+        /* Added styles for blog posts */
+        .hidden {
+            display: none;
+        }
+
+        #blogs {
+            margin-top: 20px;
+        }
+
+        .p-4 {
+            padding: 16px;
+        }
+
+        .bg-gray-200 {
+            background-color: #e5e7eb;
+        }
+
+        .rounded {
+            border-radius: 8px;
+        }
+
+        .my-4 {
+            margin-top: 16px;
+            margin-bottom: 16px;
+        }
+
+        .font-bold {
+            font-weight: bold;
+        }
+
+        .italic {
+            font-style: italic;
+        }
+
+        .font-thin {
+            font-weight: 300;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav>
+        <div class="logo">{ <span>CODE</span> WALL }</div>
+        <div class="nav-links">
+            <a href="#">My Blogs</a>
+            <a href="#">Login</a>
+            <a href="#">Sign Up</a>
+        </div>
+    </nav>
+
+    <!-- Main container -->
+    <div class="container">
+        <h2>Your Blog Posts</h2>
+        <button id="show_form_btn" class="add-post-btn">Add New Post</button>
+
+        <!-- Form section (replaces the modal) -->
+        <div id="form_section" class="hidden" style="margin-top: 20px; padding: 20px; background-color: #f3f4f6; border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="margin: 0;">Your Post</h3>
+                <button id="hide_form_btn" style="background: none; border: none; cursor: pointer; font-size: 20px;">&times;</button>
+            </div>
+            <form id="postForm">
+                <input type="text" id="title" placeholder="Title" required>
+                <textarea id="description" placeholder="Description" required></textarea>
+                <button type="submit" class="post-btn">POST</button>
+            </form>
+        </div>
+
+        <!-- Blog posts container -->
+        <div id="blogs"></div>
+    </div>
+
+    <script>
+        // Class User
+        class User {
+
+            constructor(nom) {
+                this.username = nom;
+            }
+            toJson() {
+                return {
+                    username: this.username
+                };
+            }
+            fromJson(userJson) {
+                return new User(userJson.username);
+            }
+        }
+
+        // Class Post
+        class Post {
+            constructor(T, D, U) {
+                this.title = T;
+                this.description = D;
+                this.user = U;
+                this.createdAt = new Date().toDateString();
+            }
+            toJson() {
+                return {
+                    title: this.title,
+                    description: this.description,
+                    user: this.user,
+                    createdAt: this.createdAt
+                };
+            }
+            fromJson(postJson) {
+                return new Post(postJson.title, postJson.description, postJson.user);
+            }
+        }
+
+        let user;
+        // Tant que l'utilisateur n'a pas entrer son username, on va toujours le demander de l'entrer
+        while (user === undefined || user === null || user === '') {
+            user = prompt("Enter your username.");
+        }
+        // Instantiation de User
+        user = new User(user);
+
+        let show_form_btn = document.querySelector("#show_form_btn");
+        let form_section = document.querySelector("#form_section");
+        let hide_form_btn = document.querySelector("#hide_form_btn");
+        let form = document.querySelector("form");
+
+        // Afficher form
+        show_form_btn.addEventListener("click", () => {
+            form_section.classList.remove("hidden");
+        });
+
+        // Cacher form
+        hide_form_btn.addEventListener("click", () => {
+            form_section.classList.add("hidden");
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            let title = document.querySelector("#title").value;
+            let description = document.querySelector("#description").value;
+            let post = new Post(title, description, user.username);
+            new_post(post.toJson());
+            // Reset form
+            form.reset();
+            form_section.classList.add("hidden");
+        });
+
+        let new_post = (post) => {
+            let posts_container = document.querySelector("#blogs");
+            let blog = document.createElement("div");
+            blog.setAttribute("class", "p-4 bg-gray-200 rounded my-4");
+            let p1 = document.createElement("p");
+            p1.setAttribute("class", "font-bold");
+            let p2 = document.createElement("p");
+            p1.innerHTML = post.title + " | <span class='italic font-thin'>by " + post.user + ", posted at " + post.createdAt + "</span>";
+            p2.innerText = post.description;
+            blog.appendChild(p1);
+            blog.appendChild(p2);
+            posts_container.appendChild(blog);
+        };
+    </script>
+
+</body>
+</html>
